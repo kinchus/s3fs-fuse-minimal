@@ -86,6 +86,62 @@ AC_ARG_WITH(
   ])
 
 dnl
+dnl use wolfssl library for ssl
+dnl
+AC_MSG_CHECKING([s3fs build with WolfSSL])
+AC_ARG_WITH(
+  wolfssl,
+  [AS_HELP_STRING([--with-wolfssl], [s3fs build with WolfSSL(default is no)])],
+  [
+    case "${withval}" in
+    yes)
+      AC_MSG_RESULT(yes)
+      AS_IF(
+        [test $nettle_lib = no],
+        [auth_lib=wolfssl],
+        [AC_MSG_ERROR([could not set wolfssl with nettle, nettle is only for gnutls library])])
+      ;;
+    *)
+      AC_MSG_RESULT(no)
+      ;;
+    esac
+  ],
+  [
+    AC_MSG_RESULT(no)
+  ])
+
+
+dnl
+dnl use mbedtls library for ssl
+dnl
+AC_MSG_CHECKING([s3fs build with MbedTls])
+dnl AC_ARG_WITH(
+dnl 	mbedtls, 
+dnl 	[AS_HELP_STRING([--with-mbedtls], [s3fs build with MbedTls(default is yes)])], 
+dnl 	[auth_lib=mbedtls], 
+dnl 	[AC_MSG_RESULT(yes)]
+dnl   )
+
+AC_ARG_WITH(
+   mbedtls,
+   [AS_HELP_STRING([--with-mbedtls], [s3fs build with MbedTls(default is yes)])],
+   [
+     case "${withval}" in
+     yes)
+       AC_MSG_RESULT(yes)
+       [auth_lib=mbedtls]
+       ;;
+     *)
+       AC_MSG_RESULT(no)
+       ;;
+     esac
+   ],
+   [
+     AC_MSG_RESULT(yes)
+   ])
+
+
+dnl
 dnl use openssl library for ssl
 dnl
 AC_MSG_CHECKING([s3fs build with OpenSSL])
@@ -170,14 +226,7 @@ AC_ARG_WITH(
     AC_MSG_RESULT(no)
   ])
 
-AS_IF(
-  [test $auth_lib = na],
-  AS_IF(
-    [test $nettle_lib = no],
-    [auth_lib=openssl],
-    [AC_MSG_ERROR([could not set nettle without GnuTLS library])]
-  )
-)
+
 
 dnl
 dnl For PKG_CONFIG before checking nss/gnutls.
@@ -187,6 +236,17 @@ PKG_CHECK_MODULES([common_lib_checking], [fuse >= ${min_fuse_version} libcurl >=
 
 AC_MSG_CHECKING([compile s3fs with])
 case "${auth_lib}" in
+mbedtls)
+  AC_MSG_RESULT(MbedTLS)
+  PKG_CHECK_MODULES([DEPS], [fuse >= ${min_fuse_version} libcurl >= 7.0 libxml-2.0 >= 2.6])
+  LIBS="-lmbedtls -lmbedcrypto -lmbedx509 $LIBS"
+  CFLAGS="-I/usr/local/include $CFLAGS"
+  ;;
+wolfssl)
+  AC_MSG_RESULT(WolfSSL)
+  PKG_CHECK_MODULES([DEPS], [wolfssl >= 5.0 ])
+  LIBS="-lwolfssl  $LIBS"
+  ;;
 openssl)
   AC_MSG_RESULT(OpenSSL)
   PKG_CHECK_MODULES([DEPS], [fuse >= ${min_fuse_version} libcurl >= 7.0 libxml-2.0 >= 2.6 libcrypto >= 0.9 ])
@@ -236,6 +296,8 @@ nss)
   ;;
 esac
 
+AM_CONDITIONAL([USE_SSL_MBEDTLS], [test "$auth_lib" = mbedtls])
+AM_CONDITIONAL([USE_SSL_WOLFSSL], [test "$auth_lib" = wolfssl])
 AM_CONDITIONAL([USE_SSL_OPENSSL], [test "$auth_lib" = openssl])
 AM_CONDITIONAL([USE_SSL_OPENSSL_30], [test "$use_openssl_30" = yes])
 AM_CONDITIONAL([USE_SSL_GNUTLS], [test "$auth_lib" = gnutls -o "$auth_lib" = nettle])

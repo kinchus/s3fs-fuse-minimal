@@ -59,6 +59,12 @@ s3fs_SOURCES = \
     autolock.cpp \
     threadpoolman.cpp \
     common_auth.cpp
+if USE_SSL_MBEDTLS
+    s3fs_SOURCES += mbedtls_auth.cpp
+endif
+if USE_SSL_WOLFSSL
+    s3fs_SOURCES += wolfssl_auth.cpp
+endif
 if USE_SSL_OPENSSL
     s3fs_SOURCES += openssl_auth.cpp
 endif
@@ -77,6 +83,12 @@ noinst_PROGRAMS = \
     test_string_util
 
 test_curl_util_SOURCES = common_auth.cpp curl_util.cpp string_util.cpp test_curl_util.cpp s3fs_global.cpp s3fs_logger.cpp
+if USE_SSL_MBEDTLS
+    test_curl_util_SOURCES += mbedtls_auth.cpp
+endif
+if USE_SSL_WOLFSSL
+    test_curl_util_SOURCES += wolfssl_auth.cpp
+endif
 if USE_SSL_OPENSSL
     test_curl_util_SOURCES += openssl_auth.cpp
 endif
