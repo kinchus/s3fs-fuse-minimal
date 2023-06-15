@@ -2,6 +2,9 @@
 /.cproject
 /.autotools
 /.settings/
+src/*.o
+src/*.in
+test/*.o
 
 # http://www.gnu.org/software/automake
 
@@ -15,8 +18,8 @@ Makefile.in
 .dirstamp
 
 # http://www.gnu.org/software/autoconf
-
 autom4te.cache
+config.h
 /autoscan.log
 /autoscan-*.log
 /aclocal.m4

@@ -64,54 +64,6 @@ nettle_lib=no
 use_openssl_30=no
 
 dnl
-dnl nettle library
-dnl
-AC_MSG_CHECKING([s3fs build with nettle(GnuTLS)])
-AC_ARG_WITH(
-  nettle,
-  [AS_HELP_STRING([--with-nettle], [s3fs build with nettle in GnuTLS(default no)])],
-  [
-    case "${withval}" in
-    yes)
-      AC_MSG_RESULT(yes)
-      nettle_lib=yes
-      ;;
-    *)
-      AC_MSG_RESULT(no)
-      ;;
-    esac
-  ],
-  [
-    AC_MSG_RESULT(no)
-  ])
-
-dnl
-dnl use wolfssl library for ssl
-dnl
-AC_MSG_CHECKING([s3fs build with WolfSSL])
-AC_ARG_WITH(
-  wolfssl,
-  [AS_HELP_STRING([--with-wolfssl], [s3fs build with WolfSSL(default is no)])],
-  [
-    case "${withval}" in
-    yes)
-      AC_MSG_RESULT(yes)
-      AS_IF(
-        [test $nettle_lib = no],
-        [auth_lib=wolfssl],
-        [AC_MSG_ERROR([could not set wolfssl with nettle, nettle is only for gnutls library])])
-      ;;
-    *)
-      AC_MSG_RESULT(no)
-      ;;
-    esac
-  ],
-  [
-    AC_MSG_RESULT(no)
-  ])
-
-
-dnl
 dnl use mbedtls library for ssl
 dnl
 AC_MSG_CHECKING([s3fs build with MbedTls])
@@ -140,6 +92,55 @@ AC_ARG_WITH(
      AC_MSG_RESULT(yes)
    ])
 
+
+dnl
+dnl use wolfssl library for ssl
+dnl
+AC_MSG_CHECKING([s3fs build with WolfSSL])
+AC_ARG_WITH(
+  wolfssl,
+  [AS_HELP_STRING([--with-wolfssl], [s3fs build with WolfSSL(default is no)])],
+  [
+    case "${withval}" in
+    yes)
+      AC_MSG_RESULT(yes)
+      AS_IF(
+        [test $nettle_lib = no],
+        [auth_lib=wolfssl],
+        [AC_MSG_ERROR([could not set wolfssl with nettle, nettle is only for gnutls library])])
+      ;;
+    *)
+      AC_MSG_RESULT(no)
+      ;;
+    esac
+  ],
+  [
+    AC_MSG_RESULT(no)
+  ])
+
+
+dnl
+dnl nettle library
+dnl
+AC_MSG_CHECKING([s3fs build with nettle(GnuTLS)])
+AC_ARG_WITH(
+  nettle,
+  [AS_HELP_STRING([--with-nettle], [s3fs build with nettle in GnuTLS(default no)])],
+  [
+    case "${withval}" in
+    yes)
+      AC_MSG_RESULT(yes)
+      nettle_lib=yes
+      ;;
+    *)
+      AC_MSG_RESULT(no)
+      ;;
+    esac
+  ],
+  [
+    AC_MSG_RESULT(no)
+  ])
+  
 
 dnl
 dnl use openssl library for ssl
@@ -238,14 +239,13 @@ AC_MSG_CHECKING([compile s3fs with])
 case "${auth_lib}" in
 mbedtls)
   AC_MSG_RESULT(MbedTLS)
+  AC_CHECK_HEADER(mbedtls/md.h, [break], [AC_MSG_ERROR([MbedTLS support explicitly requested, but includes could not be found. Try setting mbedtls_INCLUDES=/path/to/mbedtls/include])])
+  AC_CHECK_LIB([mbedcrypto],[mbedtls_md],,)
   PKG_CHECK_MODULES([DEPS], [fuse >= ${min_fuse_version} libcurl >= 7.0 libxml-2.0 >= 2.6])
-  LIBS="-lmbedtls -lmbedcrypto -lmbedx509 $LIBS"
-  CFLAGS="-I/usr/local/include $CFLAGS"
   ;;
 wolfssl)
   AC_MSG_RESULT(WolfSSL)
-  PKG_CHECK_MODULES([DEPS], [wolfssl >= 5.0 ])
-  LIBS="-lwolfssl  $LIBS"
+  PKG_CHECK_MODULES([DEPS], [fuse >= ${min_fuse_version} libcurl >= 7.0 libxml-2.0 >= 2.6 wolfssl >= 5.0 ])
   ;;
 openssl)
   AC_MSG_RESULT(OpenSSL)
