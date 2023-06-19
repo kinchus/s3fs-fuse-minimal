@@ -50,6 +50,8 @@
 #include "threadpoolman.h"
 #include "autolock.h"
 
+#define USECACHE	0
+
 //-------------------------------------------------------------------
 // Symbols
 //-------------------------------------------------------------------
@@ -86,7 +88,9 @@ static mode_t s3fs_umask          = 0;
 static bool is_s3fs_uid           = false;// default does not set.
 static bool is_s3fs_gid           = false;// default does not set.
 static bool is_s3fs_umask         = false;// default does not set.
-static bool is_remove_cache       = false;
+#if USECACHE
+	static bool is_remove_cache       = false;
+#endif
 static bool is_use_xattr          = false;
 static off_t multipart_threshold  = 25 * 1024 * 1024;
 static int64_t singlepart_copy_limit = 512 * 1024 * 1024;
@@ -4209,10 +4213,12 @@ static void* s3fs_init(struct fuse_conn_info* conn)
 {
     S3FS_PRN_INIT_INFO("init v%s(commit:%s) with %s, credential-library(%s)", VERSION, COMMIT_HASH_VAL, s3fs_crypt_lib_name(), ps3fscred->GetCredFuncVersion(false));
 
+#if USECACHE
     // cache(remove cache dirs at first)
     if(is_remove_cache && (!CacheFileStat::DeleteCacheFileStatDirectory() || !FdManager::DeleteCacheDirectory())){
         S3FS_PRN_DBG("Could not initialize cache directory.");
     }
+#endif
 
     // check loading IAM role name
     if(!ps3fscred->LoadIAMRoleFromMetaData()){
@@ -4258,10 +4264,12 @@ static void s3fs_destroy(void*)
         S3FS_PRN_WARN("Failed to clean up signal object.");
     }
 
+#if USECACHE
     // cache(remove at last)
     if(is_remove_cache && (!CacheFileStat::DeleteCacheFileStatDirectory() || !FdManager::DeleteCacheDirectory())){
         S3FS_PRN_WARN("Could not remove cache directory.");
     }
+#endif
 }
 
 static int s3fs_access(const char* path, int mask)
@@ -4733,6 +4741,7 @@ static int my_fuse_opt_proc(void* data, const char* arg, int key, struct fuse_ar
             FdManager::SetTmpDir(strchr(arg, '=') + sizeof(char));
             return 0;
         }
+#if USECACHE
         if(is_prefix(arg, "use_cache=")){
             FdManager::SetCacheDir(strchr(arg, '=') + sizeof(char));
             return 0;
@@ -4745,6 +4754,7 @@ static int my_fuse_opt_proc(void* data, const char* arg, int key, struct fuse_ar
             is_remove_cache = true;
             return 0;
         }
+#endif
         if(is_prefix(arg, "multireq_max=")){
             int maxreq = static_cast<int>(cvt_strtoofft(strchr(arg, '=') + sizeof(char), /*base=*/ 10));
             S3fsCurl::SetMaxMultiRequest(maxreq);

@@ -30,6 +30,7 @@
 #include "mbedtls/md.h"     /* generic interface */
 #include "mbedtls/md5.h"
 #include "mbedtls/sha256.h" /* SHA-256 only */
+#include "mbedtls/threading.h" /* SHA-256 only */
 #include <string>
 #include <map>
 
@@ -37,6 +38,17 @@
 #include "s3fs.h"
 #include "s3fs_auth.h"
 #include "s3fs_logger.h"
+
+
+
+char* printHex(unsigned char *digest, unsigned int len, char* outstr) {
+	char *pOut = outstr;
+	for(int i= 0; i<len; i++){
+		sprintf(&pOut[i*2], "%02x", digest[i]);
+	}
+	pOut[len*2] = '\0';
+	return pOut;
+}
 
 //-------------------------------------------------------------------
 // Utility Function for version
@@ -66,8 +78,154 @@ bool s3fs_destroy_global_ssl()
 //-------------------------------------------------------------------
 // Utility Function for crypt lock
 //-------------------------------------------------------------------
+
+
+
+#ifdef MBEDTLS_PTHREAD
+
+#define CRYPTO_num_locks()            (1)
+#define CRYPTO_set_locking_callback(func)
+#define CRYPTO_get_locking_callback()         (NULL)
+#define CRYPTO_set_add_lock_callback(func)
+#define CRYPTO_get_add_lock_callback()        (NULL)
+#define CRYPTO_set_id_callback(func)
+#define CRYPTO_get_id_callback()                     (NULL)
+#define CRYPTO_thread_id()                           (0UL)
+#define CRYPTO_set_dynlock_create_callback(dyn_create_function)
+#define CRYPTO_set_dynlock_lock_callback(dyn_lock_function)
+#define CRYPTO_set_dynlock_destroy_callback(dyn_destroy_function)
+#define CRYPTO_get_dynlock_create_callback()          (NULL)
+#define CRYPTO_get_dynlock_lock_callback()            (NULL)
+#define CRYPTO_get_dynlock_destroy_callback()         (NULL)
+# define CRYPTO_cleanup_all_ex_data() while(0) continue
+
+static mbedtls_threading_mutex_t* s3fs_crypt_mutex = NULL;
+
+static void s3fs_crypt_mutex_lock(int mode, int pos, const char* file, int line) __attribute__ ((unused));
+static void s3fs_crypt_mutex_lock(int mode, int pos, const char* file, int line)
+{
+	S3FS_PRN_DBG("s3fs_crypt_mutex_lock start");
+
+	if(s3fs_crypt_mutex){
+        int result;
+        if(mode){
+            if(0 != (result = mbedtls_mutex_lock(&s3fs_crypt_mutex[pos]))){
+                S3FS_PRN_CRIT("pthread_mutex_lock returned: %d", result);
+                abort();
+            }
+        }else{
+            if(0 != (result = mbedtls_mutex_unlock(&s3fs_crypt_mutex[pos]))){
+                S3FS_PRN_CRIT("pthread_mutex_unlock returned: %d", result);
+                abort();
+            }
+        }
+    }
+}
+
+static unsigned long s3fs_crypt_get_threadid() __attribute__ ((unused));
+static unsigned long s3fs_crypt_get_threadid()
+{
+    // For FreeBSD etc, some system's pthread_t is structure pointer.
+    // Then we use cast like C style(not C++) instead of ifdef.
+    return (unsigned long)(pthread_self());
+}
+
+static struct mbedtls_threading_mutex_t* s3fs_dyn_crypt_mutex(const char* file, int line) __attribute__ ((unused));
+static struct mbedtls_threading_mutex_t* s3fs_dyn_crypt_mutex(const char* file, int line)
+{
+	S3FS_PRN_DBG("s3fs_dyn_crypt_mutex");
+	mbedtls_threading_mutex_t  *dyndata = new mbedtls_threading_mutex_t();
+	mbedtls_mutex_init(dyndata);
+    return dyndata;
+}
+
+static void s3fs_dyn_crypt_mutex_lock(int mode, mbedtls_threading_mutex_t* dyndata, const char* file, int line) __attribute__ ((unused));
+static void s3fs_dyn_crypt_mutex_lock(int mode, mbedtls_threading_mutex_t* dyndata, const char* file, int line)
+{
+	S3FS_PRN_DBG("s3fs_dyn_crypt_mutex_lock");
+
+    if(dyndata){
+        int result;
+        if(mode){
+            if(0 != (result = mbedtls_mutex_lock(dyndata))){
+                S3FS_PRN_CRIT("pthread_mutex_lock returned: %d", result);
+                abort();
+            }
+        }else{
+            if(0 != (result = mbedtls_mutex_unlock(dyndata))){
+                S3FS_PRN_CRIT("pthread_mutex_unlock returned: %d", result);
+                abort();
+            }
+        }
+    }
+}
+
+static void s3fs_destroy_dyn_crypt_mutex(mbedtls_threading_mutex_t* dyndata, const char* file, int line) __attribute__ ((unused));
+static void s3fs_destroy_dyn_crypt_mutex(mbedtls_threading_mutex_t* dyndata, const char* file, int line)
+{
+    if(dyndata){
+      mbedtls_mutex_free(dyndata);
+      delete dyndata;
+    }
+}
+
 bool s3fs_init_crypt_mutex()
 {
+	S3FS_PRN_DBG("Initializing crypt mutex");
+
+    if(s3fs_crypt_mutex){
+        S3FS_PRN_DBG("s3fs_crypt_mutex is not NULL, destroy it.");
+        if(!s3fs_destroy_crypt_mutex()){
+            S3FS_PRN_ERR("Failed to s3fs_crypt_mutex");
+            return false;
+        }
+    }
+
+    s3fs_crypt_mutex = new mbedtls_threading_mutex_t[CRYPTO_num_locks()];
+    for(int cnt = 0; cnt < CRYPTO_num_locks(); cnt++){
+        mbedtls_mutex_init(&s3fs_crypt_mutex[cnt]);
+    }
+    // static lock
+    CRYPTO_set_locking_callback(s3fs_crypt_mutex_lock);
+    CRYPTO_set_id_callback(s3fs_crypt_get_threadid);
+    // dynamic lock
+    CRYPTO_set_dynlock_create_callback(s3fs_dyn_crypt_mutex);
+    CRYPTO_set_dynlock_lock_callback(s3fs_dyn_crypt_mutex_lock);
+    CRYPTO_set_dynlock_destroy_callback(s3fs_destroy_dyn_crypt_mutex);
+
+    return true;
+}
+
+bool s3fs_destroy_crypt_mutex()
+{
+    if(!s3fs_crypt_mutex){
+        return true;
+    }
+
+    CRYPTO_set_dynlock_destroy_callback(NULL);
+    CRYPTO_set_dynlock_lock_callback(NULL);
+    CRYPTO_set_dynlock_create_callback(NULL);
+    CRYPTO_set_id_callback(NULL);
+    CRYPTO_set_locking_callback(NULL);
+
+    for(int cnt = 0; cnt < CRYPTO_num_locks(); cnt++){
+        mbedtls_mutex_free(&s3fs_crypt_mutex[cnt]);
+    }
+    CRYPTO_cleanup_all_ex_data();
+    delete[] s3fs_crypt_mutex;
+    s3fs_crypt_mutex = NULL;
+
+    return true;
+}
+
+#else
+
+
+
+
+bool s3fs_init_crypt_mutex()
+{
+	S3FS_PRN_DBG("s3fs_init_crypt_mutex start");
     return true;
 }
 
@@ -76,29 +234,31 @@ bool s3fs_destroy_crypt_mutex()
     return true;
 }
 
+#endif
+
+
 //-------------------------------------------------------------------
 // Utility Function for HMAC
 //-------------------------------------------------------------------
 
 bool s3fs_HMAC(const void* key, size_t keylen, const unsigned char* data, size_t datalen, unsigned char** digest, unsigned int* digestlen)
 {
-    if(!key || !data || !digest || !digestlen){
+	if(!key || !data || !digest || !digestlen){
         return false;
     }
-    *digest = new unsigned char[*digestlen + 1];
-    if(!key || !data || !digest || !digestlen){
-        return false;
-    }
-    *digest = new unsigned char[*digestlen + 1];
-    const mbedtls_md_type_t alg = MBEDTLS_MD_SHA1;
-    mbedtls_md_context_t ctx;
+
+	*digestlen = get_sha256_digest_length();
+	*digest = new unsigned char[*digestlen + 1];
+	mbedtls_md_context_t ctx;
+	mbedtls_md_type_t alg = MBEDTLS_MD_SHA256;
     mbedtls_md_init(&ctx);
     const mbedtls_md_info_t *info = mbedtls_md_info_from_type(alg);
     mbedtls_md_setup(&ctx, info, 1);
-    mbedtls_md_hmac_starts(&ctx, (unsigned char *)key,keylen);
+    mbedtls_md_hmac_starts(&ctx, (unsigned char *)key, keylen);
     mbedtls_md_hmac_update(&ctx, data, datalen);
     mbedtls_md_hmac_finish(&ctx, *digest);
     mbedtls_md_free(&ctx);
+
     return true;
     // return s3fs_HMAC_generic(mbedtls_md_info_from_type(MBEDTLS_MD_SHA1), key, keylen, data, datalen, digest, digestlen);
 }
@@ -109,18 +269,31 @@ bool s3fs_HMAC256(const void* key, size_t keylen, const unsigned char* data, siz
     if(!key || !data || !digest || !digestlen){
         return false;
     }
+
+    S3FS_PRN_DBG("Started");
+
+    char keystr[256];
+    char* pData = (char*)data;
+    printHex((unsigned char*)key, keylen, keystr);
+
+    S3FS_PRN_DBG("KEY(%d) = %s", keylen, keystr);
+    S3FS_PRN_DBG("DATA(%d) = %s", datalen, pData);
+
+    *digestlen = get_sha256_digest_length();
     *digest = new unsigned char[*digestlen + 1];
-    const mbedtls_md_type_t alg = MBEDTLS_MD_SHA256;
-    unsigned char out[MBEDTLS_MD_MAX_SIZE]; // safe but not optimal
-    mbedtls_md_context_t ctx;
-    mbedtls_md_init(&ctx);
-    const mbedtls_md_info_t *info = mbedtls_md_info_from_type(alg);
-    mbedtls_md_setup(&ctx, info, 1);
-    mbedtls_md_hmac_starts(&ctx, (unsigned char *)key,keylen);
-    mbedtls_md_hmac_update(&ctx, data, datalen);
-    mbedtls_md_hmac_finish(&ctx, *digest);
-    mbedtls_md_free(&ctx);
-    return true;
+    mbedtls_md_type_t md_type = MBEDTLS_MD_SHA256;
+
+    memcpy(keystr, key, keylen*sizeof(unsigned char));
+    int ret = mbedtls_md_hmac(mbedtls_md_info_from_type(md_type),
+    		(unsigned char*)keystr, keylen,
+			data, datalen,
+			*digest);
+
+    char outstr[256];
+    printHex(*digest, *digestlen, outstr);
+    S3FS_PRN_DBG("HASH(%d) = %s", *digestlen, outstr);
+
+    return (ret == 0);
 }
 
 
@@ -129,7 +302,9 @@ bool s3fs_HMAC_generic(const mbedtls_md_info_t *info, const void* key, unsigned 
     if(!key || !data || !digest || !digestlen){
         return false;
     }
-    *digest = new unsigned char[*digestlen + 1];
+
+    *digestlen = MBEDTLS_MD_MAX_SIZE;
+    *digest = new unsigned char[MBEDTLS_MD_MAX_SIZE];
     mbedtls_md_context_t ctx;
     mbedtls_md_init(&ctx);
     mbedtls_md_setup(&ctx, info, 1);
@@ -139,6 +314,8 @@ bool s3fs_HMAC_generic(const mbedtls_md_info_t *info, const void* key, unsigned 
     mbedtls_md_free(&ctx);
     return true;
 }
+
+
 //-------------------------------------------------------------------
 // Utility Function for MD5
 //-------------------------------------------------------------------
@@ -202,16 +379,22 @@ size_t get_sha256_digest_length()
 
 bool s3fs_sha256(const unsigned char* data, size_t datalen, unsigned char** digest, unsigned int* digestlen)
 {
-    size_t len = (*digestlen) = static_cast<unsigned int>(get_sha256_digest_length());
+	// S3FS_PRN_DBG("Started");
+	// S3FS_PRN_DBG("DATA(%d) = %s", datalen, data);
+	size_t len = (*digestlen) = static_cast<unsigned int>(get_sha256_digest_length());
     *digest = new unsigned char[len];
-    mbedtls_sha256(data, len, *digest, 0);
+    mbedtls_sha256(data, datalen, *digest, 0);
+
+//    char outstr[256];
+//    printHex(*digest, len, outstr);
+//    S3FS_PRN_DBG("HASH(%d) = %s", *digestlen, outstr);
     return true;
 }
 
 
 unsigned char* s3fs_sha256_fd(int fd, off_t start, off_t size)
 {
-    off_t bytes;
+	off_t bytes;
     unsigned char* result;
     off_t buff_len = 512;
     unsigned char buf[buff_len];
@@ -251,6 +434,7 @@ unsigned char* s3fs_sha256_fd(int fd, off_t start, off_t size)
 
     return result;
 }
+
 
 
 /*
