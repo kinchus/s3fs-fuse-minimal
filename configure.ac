@@ -56,6 +56,26 @@ case "$target" in
       ;;
 esac
 
+
+
+dnl 
+dnl Enable/Disable s3fs local filesystem cache
+dnl
+AC_ARG_ENABLE(cache, 
+	[AS_HELP_STRING([--enable-cache], [Enable s3fs local filesystem cache. This could fill up the filesystem (default=no)])],
+	[AC_DEFINE([USE_CACHE], [1], [Disable s3fs local filesystem cache])],
+	[AC_DEFINE([USE_CACHE], [0], [Enable s3fs local filesystem cache])])
+	
+	
+dnl 
+dnl Enable/Disable s3fs local filesystem cache
+dnl
+AC_ARG_ENABLE(awsV2, 
+	[AS_HELP_STRING([--enable-awsV2], [Enable AWS V2 Signature algorithm (default=no)])],
+	[AC_DEFINE(USE_V2SIGNATURE, [1], [Disable AWS V2 Signature algorithm ])],
+	[AC_DEFINE(USE_V2SIGNATURE, [0], [Disable AWS V2 Signature algorithm ])])
+
+
 dnl ----------------------------------------------
 dnl Choice SSL library
 dnl ----------------------------------------------
@@ -67,13 +87,6 @@ dnl
 dnl use mbedtls library for ssl
 dnl
 AC_MSG_CHECKING([s3fs build with MbedTls])
-dnl AC_ARG_WITH(
-dnl 	mbedtls, 
-dnl 	[AS_HELP_STRING([--with-mbedtls], [s3fs build with MbedTls(default is yes)])], 
-dnl 	[auth_lib=mbedtls], 
-dnl 	[AC_MSG_RESULT(yes)]
-dnl   )
-
 AC_ARG_WITH(
    mbedtls,
    [AS_HELP_STRING([--with-mbedtls], [s3fs build with MbedTls(default is yes)])],
@@ -91,7 +104,6 @@ AC_ARG_WITH(
    [
      AC_MSG_RESULT(yes)
    ])
-
 
 dnl
 dnl use wolfssl library for ssl
@@ -381,6 +393,7 @@ AC_COMPILE_IFELSE(
    AC_MSG_RESULT(no)
   ]
 )
+
 
 dnl ----------------------------------------------
 dnl dl library

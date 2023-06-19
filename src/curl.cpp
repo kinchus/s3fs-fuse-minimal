@@ -911,7 +911,7 @@ bool S3fsCurl::FinalCheckSse()
                 S3FS_PRN_ERR("sse type is SSE-KMS, but there is no specified kms id.");
                 return false;
             }
-#ifndef NO_V2SIGNATURE
+#if USE_V2SIGNATURE
             if(S3fsCurl::GetSignatureType() == V2_ONLY){
                 S3FS_PRN_ERR("sse type is SSE-KMS, but signature type is not v4. SSE-KMS require signature v4.");
                 return false;
@@ -2749,7 +2749,7 @@ int S3fsCurl::RequestPerform(bool dontAddAuthHeaders /*=false*/)
 // @param date e.g., get_date_rfc850()
 // @param resource e.g., "/pub"
 //
-#ifndef NO_V2SIGNATURE
+#if USE_V2SIGNATURE
 std::string S3fsCurl::CalcSignatureV2(const std::string& method, const std::string& strMD5, const std::string& content_type, const std::string& date, const std::string& resource, const std::string& secret_access_key, const std::string& access_token)
 {
     std::string Signature;
@@ -2916,7 +2916,7 @@ void S3fsCurl::insertV4Headers(const std::string& access_key_id, const std::stri
     }
 }
 
-#ifndef NO_V2SIGNATURE
+#if USE_V2SIGNATURE
 void S3fsCurl::insertV2Headers(const std::string& access_key_id, const std::string& secret_access_key, const std::string& access_token)
 {
     std::string resource;
@@ -2963,7 +2963,7 @@ void S3fsCurl::insertAuthHeaders()
 
     if(S3fsCurl::ps3fscred->IsIBMIAMAuth()){
         insertIBMIAMHeaders(access_key_id, access_token);
-#ifndef NO_V2SIGNATURE
+#if USE_V2SIGNATURE
     }else if(S3fsCurl::signature_type == V2_ONLY){
         insertV2Headers(access_key_id, secret_access_key, access_token);
 #endif

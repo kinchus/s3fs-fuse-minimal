@@ -227,7 +227,7 @@ bool s3fs_destroy_crypt_mutex()
 //-------------------------------------------------------------------
 // Utility Function for HMAC
 //-------------------------------------------------------------------
-#ifndef NO_V2SIGNATURE
+#if USE_V2SIGNATURE
 bool s3fs_HMAC(const void* key, size_t keylen, const unsigned char* data, size_t datalen, unsigned char** digest, unsigned int* digestlen)
 {
 	if(!key || !data || !digest || !digestlen){
