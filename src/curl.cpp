@@ -41,6 +41,8 @@
 #include "string_util.h"
 #include "addhead.h"
 
+#define NO_V2SIGNATURE 1
+
 //-------------------------------------------------------------------
 // Symbols
 //-------------------------------------------------------------------
@@ -2747,6 +2749,7 @@ int S3fsCurl::RequestPerform(bool dontAddAuthHeaders /*=false*/)
 // @param date e.g., get_date_rfc850()
 // @param resource e.g., "/pub"
 //
+#ifndef NO_V2SIGNATURE
 std::string S3fsCurl::CalcSignatureV2(const std::string& method, const std::string& strMD5, const std::string& content_type, const std::string& date, const std::string& resource, const std::string& secret_access_key, const std::string& access_token)
 {
     std::string Signature;
@@ -2784,6 +2787,7 @@ std::string S3fsCurl::CalcSignatureV2(const std::string& method, const std::stri
 
     return Signature;
 }
+#endif
 
 std::string S3fsCurl::CalcSignature(const std::string& method, const std::string& canonical_uri, const std::string& query_string, const std::string& strdate, const std::string& payload_hash, const std::string& date8601, const std::string& secret_access_key, const std::string& access_token)
 {
@@ -2912,6 +2916,7 @@ void S3fsCurl::insertV4Headers(const std::string& access_key_id, const std::stri
     }
 }
 
+#ifndef NO_V2SIGNATURE
 void S3fsCurl::insertV2Headers(const std::string& access_key_id, const std::string& secret_access_key, const std::string& access_token)
 {
     std::string resource;
@@ -2933,7 +2938,7 @@ void S3fsCurl::insertV2Headers(const std::string& access_key_id, const std::stri
         requestHeaders   = curl_slist_sort_insert(requestHeaders, "Authorization", std::string("AWS " + access_key_id + ":" + Signature).c_str());
     }
 }
-
+#endif
 void S3fsCurl::insertIBMIAMHeaders(const std::string& access_key_id, const std::string& access_token)
 {
     requestHeaders = curl_slist_sort_insert(requestHeaders, "Authorization", ("Bearer " + access_token).c_str());
@@ -2958,8 +2963,10 @@ void S3fsCurl::insertAuthHeaders()
 
     if(S3fsCurl::ps3fscred->IsIBMIAMAuth()){
         insertIBMIAMHeaders(access_key_id, access_token);
+#ifndef NO_V2SIGNATURE
     }else if(S3fsCurl::signature_type == V2_ONLY){
         insertV2Headers(access_key_id, secret_access_key, access_token);
+#endif
     }else{
         insertV4Headers(access_key_id, secret_access_key, access_token);
     }

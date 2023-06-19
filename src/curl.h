@@ -31,6 +31,8 @@
 #include "metaheader.h"
 #include "fdcache_page.h"
 
+#define NO_V2SIGNATURE 1
+
 //----------------------------------------------
 // Avoid dependency on libcurl version
 //----------------------------------------------
@@ -250,11 +252,15 @@ class S3fsCurl
         bool RemakeHandle();
         bool ClearInternalData();
         void insertV4Headers(const std::string& access_key_id, const std::string& secret_access_key, const std::string& access_token);
+#ifndef NO_V2SIGNATURE
         void insertV2Headers(const std::string& access_key_id, const std::string& secret_access_key, const std::string& access_token);
+#endif
         void insertIBMIAMHeaders(const std::string& access_key_id, const std::string& access_token);
         void insertAuthHeaders();
         bool AddSseRequestHead(sse_type_t ssetype, const std::string& ssevalue, bool is_copy);
+#ifndef NO_V2SIGNATURE
         std::string CalcSignatureV2(const std::string& method, const std::string& strMD5, const std::string& content_type, const std::string& date, const std::string& resource, const std::string& secret_access_key, const std::string& access_token);
+#endif
         std::string CalcSignature(const std::string& method, const std::string& canonical_uri, const std::string& query_string, const std::string& strdate, const std::string& payload_hash, const std::string& date8601, const std::string& secret_access_key, const std::string& access_token);
         int UploadMultipartPostSetup(const char* tpath, int part_num, const std::string& upload_id);
         int CopyMultipartPostSetup(const char* from, const char* to, int part_num, const std::string& upload_id, headers_t& meta);
