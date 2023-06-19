@@ -67,13 +67,6 @@ dnl
 dnl use mbedtls library for ssl
 dnl
 AC_MSG_CHECKING([s3fs build with MbedTls])
-dnl AC_ARG_WITH(
-dnl 	mbedtls, 
-dnl 	[AS_HELP_STRING([--with-mbedtls], [s3fs build with MbedTls(default is yes)])], 
-dnl 	[auth_lib=mbedtls], 
-dnl 	[AC_MSG_RESULT(yes)]
-dnl   )
-
 AC_ARG_WITH(
    mbedtls,
    [AS_HELP_STRING([--with-mbedtls], [s3fs build with MbedTls(default is yes)])],
@@ -91,7 +84,6 @@ AC_ARG_WITH(
    [
      AC_MSG_RESULT(yes)
    ])
-
 
 dnl
 dnl use wolfssl library for ssl
@@ -381,6 +373,7 @@ AC_COMPILE_IFELSE(
    AC_MSG_RESULT(no)
   ]
 )
+
 
 dnl ----------------------------------------------
 dnl dl library

@@ -31,8 +31,6 @@
 #include "metaheader.h"
 #include "fdcache_page.h"
 
-#define NO_V2SIGNATURE 1
-
 //----------------------------------------------
 // Avoid dependency on libcurl version
 //----------------------------------------------
