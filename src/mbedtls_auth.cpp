@@ -40,16 +40,6 @@
 #include "s3fs_logger.h"
 
 
-
-char* printHex(unsigned char *digest, unsigned int len, char* outstr) {
-	char *pOut = outstr;
-	for(int i= 0; i<len; i++){
-		sprintf(&pOut[i*2], "%02x", digest[i]);
-	}
-	pOut[len*2] = '\0';
-	return pOut;
-}
-
 //-------------------------------------------------------------------
 // Utility Function for version
 //-------------------------------------------------------------------
@@ -78,8 +68,6 @@ bool s3fs_destroy_global_ssl()
 //-------------------------------------------------------------------
 // Utility Function for crypt lock
 //-------------------------------------------------------------------
-
-
 
 #ifdef MBEDTLS_PTHREAD
 
@@ -270,28 +258,14 @@ bool s3fs_HMAC256(const void* key, size_t keylen, const unsigned char* data, siz
         return false;
     }
 
-    S3FS_PRN_DBG("Started");
-
-    char keystr[256];
-    char* pData = (char*)data;
-    printHex((unsigned char*)key, keylen, keystr);
-
-    S3FS_PRN_DBG("KEY(%d) = %s", keylen, keystr);
-    S3FS_PRN_DBG("DATA(%d) = %s", datalen, pData);
-
     *digestlen = get_sha256_digest_length();
     *digest = new unsigned char[*digestlen + 1];
     mbedtls_md_type_t md_type = MBEDTLS_MD_SHA256;
 
-    memcpy(keystr, key, keylen*sizeof(unsigned char));
     int ret = mbedtls_md_hmac(mbedtls_md_info_from_type(md_type),
-    		(unsigned char*)keystr, keylen,
+    		(unsigned char*)key, keylen,
 			data, datalen,
 			*digest);
-
-    char outstr[256];
-    printHex(*digest, *digestlen, outstr);
-    S3FS_PRN_DBG("HASH(%d) = %s", *digestlen, outstr);
 
     return (ret == 0);
 }
