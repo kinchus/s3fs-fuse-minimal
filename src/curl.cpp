@@ -41,8 +41,6 @@
 #include "string_util.h"
 #include "addhead.h"
 
-#define NO_V2SIGNATURE 1
-
 //-------------------------------------------------------------------
 // Symbols
 //-------------------------------------------------------------------
@@ -913,10 +911,12 @@ bool S3fsCurl::FinalCheckSse()
                 S3FS_PRN_ERR("sse type is SSE-KMS, but there is no specified kms id.");
                 return false;
             }
+#ifndef NO_V2SIGNATURE
             if(S3fsCurl::GetSignatureType() == V2_ONLY){
                 S3FS_PRN_ERR("sse type is SSE-KMS, but signature type is not v4. SSE-KMS require signature v4.");
                 return false;
             }
+#endif
             return true;
     }
     S3FS_PRN_ERR("sse type is unknown(%d).", static_cast<int>(S3fsCurl::ssetype));

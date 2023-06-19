@@ -5155,10 +5155,6 @@ static int my_fuse_opt_proc(void* data, const char* arg, int key, struct fuse_ar
             }
             return 0;
         }
-        if(0 == strcmp(arg, "sigv2")){
-            S3fsCurl::SetSignatureType(V2_ONLY);
-            return 0;
-        }
         if(0 == strcmp(arg, "sigv4")){
             S3fsCurl::SetSignatureType(V4_ONLY);
             return 0;
