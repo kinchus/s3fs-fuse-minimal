@@ -39,7 +39,6 @@
 #include "s3fs_auth.h"
 #include "s3fs_logger.h"
 
-
 //-------------------------------------------------------------------
 // Utility Function for version
 //-------------------------------------------------------------------
@@ -228,7 +227,7 @@ bool s3fs_destroy_crypt_mutex()
 //-------------------------------------------------------------------
 // Utility Function for HMAC
 //-------------------------------------------------------------------
-
+#ifndef NO_V2SIGNATURE
 bool s3fs_HMAC(const void* key, size_t keylen, const unsigned char* data, size_t datalen, unsigned char** digest, unsigned int* digestlen)
 {
 	if(!key || !data || !digest || !digestlen){
@@ -250,7 +249,7 @@ bool s3fs_HMAC(const void* key, size_t keylen, const unsigned char* data, size_t
     return true;
     // return s3fs_HMAC_generic(mbedtls_md_info_from_type(MBEDTLS_MD_SHA1), key, keylen, data, datalen, digest, digestlen);
 }
-
+#endif
 
 bool s3fs_HMAC256(const void* key, size_t keylen, const unsigned char* data, size_t datalen, unsigned char** digest, unsigned int* digestlen)
 {
@@ -271,23 +270,23 @@ bool s3fs_HMAC256(const void* key, size_t keylen, const unsigned char* data, siz
 }
 
 
-bool s3fs_HMAC_generic(const mbedtls_md_info_t *info, const void* key, unsigned long keylen, const unsigned char* data, size_t datalen, unsigned char** digest, unsigned int* digestlen)
-{
-    if(!key || !data || !digest || !digestlen){
-        return false;
-    }
-
-    *digestlen = MBEDTLS_MD_MAX_SIZE;
-    *digest = new unsigned char[MBEDTLS_MD_MAX_SIZE];
-    mbedtls_md_context_t ctx;
-    mbedtls_md_init(&ctx);
-    mbedtls_md_setup(&ctx, info, 1);
-    mbedtls_md_hmac_starts(&ctx, (unsigned char *)key,keylen);
-    mbedtls_md_hmac_update(&ctx, data, datalen);
-    mbedtls_md_hmac_finish(&ctx, *digest);
-    mbedtls_md_free(&ctx);
-    return true;
-}
+//bool s3fs_HMAC_generic(const mbedtls_md_info_t *info, const void* key, unsigned long keylen, const unsigned char* data, size_t datalen, unsigned char** digest, unsigned int* digestlen)
+//{
+//    if(!key || !data || !digest || !digestlen){
+//        return false;
+//    }
+//
+//    *digestlen = MBEDTLS_MD_MAX_SIZE;
+//    *digest = new unsigned char[MBEDTLS_MD_MAX_SIZE];
+//    mbedtls_md_context_t ctx;
+//    mbedtls_md_init(&ctx);
+//    mbedtls_md_setup(&ctx, info, 1);
+//    mbedtls_md_hmac_starts(&ctx, (unsigned char *)key,keylen);
+//    mbedtls_md_hmac_update(&ctx, data, datalen);
+//    mbedtls_md_hmac_finish(&ctx, *digest);
+//    mbedtls_md_free(&ctx);
+//    return true;
+//}
 
 
 //-------------------------------------------------------------------
