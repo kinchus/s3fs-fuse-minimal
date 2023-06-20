@@ -32,10 +32,6 @@
 #include "fdcache_page.h"
 
 
-#if !NO_V2SIGNATURE
-#error "NO_V2SIGNATURE == 0"
-#endif
-
 //----------------------------------------------
 // Avoid dependency on libcurl version
 //----------------------------------------------
