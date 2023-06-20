@@ -24,7 +24,11 @@
 // Global variables
 //-------------------------------------------------------------------
 bool foreground                   = false;
+#if ENABLE_S3FS_EXTRAS
 bool nomultipart                  = false;
+#else
+bool nomultipart                  = true;
+#endif
 bool pathrequeststyle             = false;
 bool complement_stat              = false;
 bool noxmlns                      = false;

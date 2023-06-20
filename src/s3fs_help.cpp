@@ -238,8 +238,9 @@ static const char help_string[] =
     "      and is left for compatibility with older versions.\n"
     "\n"
 #endif
+#if ENABLE_CACHE
     "   disable_noobj_cache (default is enable)\n"
-#if ENABLE_S3FS_EXTRAS
+
     "      - By default s3fs memorizes when an object does not exist up until\n"
     "        the stat cache timeout.  This caching can cause staleness for\n"
     "        applications.  If disabled, s3fs will not memorize objects and may\n"
