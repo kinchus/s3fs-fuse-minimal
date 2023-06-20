@@ -219,7 +219,7 @@ void s3fs_low_logprn2(S3fsLog::s3fs_log_level level, int nest, const char* file,
 // small trick for VA_ARGS
 //
 
-#if USE_LOGGER
+#if ENABLE_LOGGER
 
 #define S3FS_PRN_EXIT(fmt, ...)   S3FS_LOW_LOGPRN_EXIT(fmt, ##__VA_ARGS__, "")
 #define S3FS_PRN_CRIT(fmt, ...)   S3FS_LOW_LOGPRN(S3fsLog::LEVEL_CRIT, fmt, ##__VA_ARGS__)

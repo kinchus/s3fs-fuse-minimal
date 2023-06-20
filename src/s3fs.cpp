@@ -86,7 +86,7 @@ static mode_t s3fs_umask          = 0;
 static bool is_s3fs_uid           = false;// default does not set.
 static bool is_s3fs_gid           = false;// default does not set.
 static bool is_s3fs_umask         = false;// default does not set.
-#if S3FS_CACHE
+#if ENABLE_CACHE
 	static bool is_remove_cache       = false;
 #endif
 static bool is_use_xattr          = false;
@@ -4211,7 +4211,7 @@ static void* s3fs_init(struct fuse_conn_info* conn)
 {
     S3FS_PRN_INIT_INFO("init v%s(commit:%s) with %s, credential-library(%s)", VERSION, COMMIT_HASH_VAL, s3fs_crypt_lib_name(), ps3fscred->GetCredFuncVersion(false));
 
-#if S3FS_CACHE
+#if ENABLE_CACHE
     // cache(remove cache dirs at first)
     if(is_remove_cache && (!CacheFileStat::DeleteCacheFileStatDirectory() || !FdManager::DeleteCacheDirectory())){
         S3FS_PRN_DBG("Could not initialize cache directory.");
@@ -4262,7 +4262,7 @@ static void s3fs_destroy(void*)
         S3FS_PRN_WARN("Failed to clean up signal object.");
     }
 
-#if S3FS_CACHE
+#if ENABLE_CACHE
     // cache(remove at last)
     if(is_remove_cache && (!CacheFileStat::DeleteCacheFileStatDirectory() || !FdManager::DeleteCacheDirectory())){
         S3FS_PRN_WARN("Could not remove cache directory.");
@@ -4739,7 +4739,7 @@ static int my_fuse_opt_proc(void* data, const char* arg, int key, struct fuse_ar
             FdManager::SetTmpDir(strchr(arg, '=') + sizeof(char));
             return 0;
         }
-#if S3FS_CACHE
+#if ENABLE_CACHE
         if(is_prefix(arg, "NO_CACHE=")){
             FdManager::SetCacheDir(strchr(arg, '=') + sizeof(char));
             return 0;

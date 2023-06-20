@@ -436,7 +436,7 @@ if test "x${enable_cache}" = "xyes"; then
 else
     cache_val=0
 fi
-AC_DEFINE_UNQUOTED([S3FS_CACHE], [${cache_val}], [Enable local cache])
+AC_DEFINE_UNQUOTED([ENABLE_CACHE], [${cache_val}], [Enable local cache])
 
 dnl 
 dnl Enable/Disable AWS V2 Signing algorithm
@@ -453,7 +453,7 @@ if test "x${enable_awsv2}" = "xyes"; then
 else
     awsv2_val=0
 fi
-AC_DEFINE_UNQUOTED([USE_V2SIGNATURE], [${awsv2_val}], [Enable AWS V2 Signature algorithm])
+AC_DEFINE_UNQUOTED([ENABLE_V2SIGNATURE], [${awsv2_val}], [Enable AWS V2 Signature algorithm])
 
 dnl 
 dnl
@@ -470,7 +470,7 @@ if test "x${enable_logger}" = "xyes"; then
 else
     logger_val=0
 fi
-AC_DEFINE_UNQUOTED([USE_LOGGER], [${logger_val}], [Enable S3FS logging])
+AC_DEFINE_UNQUOTED([ENABLE_LOGGER], [${logger_val}], [Enable S3FS logging])
 
 dnl 
 dnl
@@ -487,7 +487,7 @@ if test "x${enable_awscreds}" = "xyes"; then
 else
     awscreds_val=0
 fi
-AC_DEFINE_UNQUOTED([AWS_CREDENTIALS], [${enable_logger}], [Enable AWS credentials file])
+AC_DEFINE_UNQUOTED([ENABLE_AWS_CREDENTIALS], [${enable_logger}], [Enable AWS credentials file])
 
 
 dnl 
@@ -505,7 +505,7 @@ if test "x${enable_extrachks}" = "xyes"; then
 else
     extras_val=0
 fi
-AC_DEFINE_UNQUOTED([S3FS_EXTRAS], [${extras_val}], [Enable S3FS extra features])
+AC_DEFINE_UNQUOTED([ENABLE_S3FS_EXTRAS], [${extras_val}], [Enable S3FS extra features])
 
 
 dnl 

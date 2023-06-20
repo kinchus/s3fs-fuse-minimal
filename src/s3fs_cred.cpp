@@ -596,7 +596,7 @@ bool S3fsCred::SetIAMRoleFromMetaData(const char* response, AutoLock::Type type)
 //
 bool S3fsCred::IsReadableS3fsPasswdFile() const
 {
-#if S3FS_EXTRAS
+#if ENABLE_S3FS_EXTRAS
     if(passwd_file.empty()){
         return false;
     }
@@ -623,7 +623,7 @@ bool S3fsCred::IsReadableS3fsPasswdFile() const
 //
 bool S3fsCred::CheckS3fsPasswdFilePerms()
 {
-#if S3FS_EXTRAS
+#if ENABLE_S3FS_EXTRAS
     struct stat info;
 
     // let's get the file info
@@ -861,7 +861,7 @@ bool S3fsCred::ReadS3fsPasswdFile(AutoLock::Type type)
 //
 int S3fsCred::CheckS3fsCredentialAwsFormat(const kvmap_t& kvmap, std::string& access_key_id, std::string& secret_access_key)
 {
-#if S3FS_EXTRAS
+#if ENABLE_AWS_CREDENTIALS
     std::string str1(S3fsCred::AWS_ACCESSKEYID);
     std::string str2(S3fsCred::AWS_SECRETKEY);
 
@@ -888,7 +888,7 @@ int S3fsCred::CheckS3fsCredentialAwsFormat(const kvmap_t& kvmap, std::string& ac
 //
 bool S3fsCred::ReadAwsCredentialFile(const std::string &filename, AutoLock::Type type)
 {
-#if S3FS_EXTRAS
+#if ENABLE_AWS_CREDENTIALS
     // open passwd file
     std::ifstream PF(filename.c_str());
     if(!PF.good()){
@@ -1032,7 +1032,7 @@ bool S3fsCred::InitialS3fsCredentials()
         return true;
     }
 
-#if S3FS_EXTRAS
+#if ENABLE_AWS_CREDENTIALS
     // 3a - from the AWS_CREDENTIAL_FILE environment variable
     char* AWS_CREDENTIAL_FILE = getenv("AWS_CREDENTIAL_FILE");
     if(AWS_CREDENTIAL_FILE != NULL){
