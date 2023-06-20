@@ -158,7 +158,7 @@ void FdEntity::Clear()
     pseudo_fd_map.clear();
 
     if(-1 != physical_fd){
-#if USE_CACHE
+#if S3FS_CACHE
         if(!cachepath.empty()){
             // [NOTE]
             // Compare the inode of the existing cache file with the inode of
@@ -200,7 +200,7 @@ void FdEntity::Clear()
 //
 ino_t FdEntity::GetInode() const
 {
-#if USE_CACHE
+#if S3FS_CACHE
     if(cachepath.empty()){
         S3FS_PRN_INFO("cache file path is empty, then return inode as 0.");
         return 0;
@@ -237,7 +237,7 @@ void FdEntity::Close(int fd)
     // check pseudo fd count
     if(-1 != physical_fd && 0 == GetOpenCount(AutoLock::ALREADY_LOCKED)){
         AutoLock auto_data_lock(&fdent_data_lock);
-#if USE_CACHE
+#if S3FS_CACHE
         if(!cachepath.empty()){
             // [NOTE]
             // Compare the inode of the existing cache file with the inode of
@@ -319,7 +319,7 @@ int FdEntity::GetOpenCount(AutoLock::Type locktype) const
 //
 int FdEntity::OpenMirrorFile()
 {
-#if USE_CACHE
+#if S3FS_CACHE
     if(cachepath.empty()){
         S3FS_PRN_ERR("cache path is empty, why come here");
         return -EIO;
@@ -501,7 +501,7 @@ int FdEntity::Open(const headers_t* pmeta, off_t size, const struct timespec& ts
 
         CacheFileStat* pcfstat = NULL;
 
-#if USE_CACHE
+#if S3FS_CACHE
         if(!cachepath.empty()){
             // using cache
             struct stat st;
@@ -640,7 +640,7 @@ int FdEntity::Open(const headers_t* pmeta, off_t size, const struct timespec& ts
                 is_truncate = true;
             }
 
-#if USE_CACHE
+#if S3FS_CACHE
         }
 #endif
         // truncate cache(tmp) file
@@ -981,7 +981,7 @@ bool FdEntity::ClearHoldingMtime(AutoLock::Type locktype)
             S3FS_PRN_ERR("futimens failed. errno(%d)", errno);
             return false;
         }
-#if USE_CACHE
+#if S3FS_CACHE
     }else if(!cachepath.empty()){
         // not opened file yet.
         struct timespec ts[2];
@@ -1169,7 +1169,7 @@ int FdEntity::NoCacheLoadAndPost(PseudoFdInfo* pseudo_obj, off_t start, off_t si
     }
 
 
-#if USE_CACHE
+#if S3FS_CACHE
     // [NOTE]
     // This method calling means that the cache file is never used no more.
     //

@@ -56,26 +56,6 @@ case "$target" in
       ;;
 esac
 
-
-
-dnl 
-dnl Enable/Disable s3fs local filesystem cache
-dnl
-AC_ARG_ENABLE(cache, 
-	[AS_HELP_STRING([--enable-cache], [Enable s3fs local filesystem cache. This could fill up the filesystem (default=no)])],
-	[AC_DEFINE([USE_CACHE], [1], [Disable s3fs local filesystem cache])],
-	[AC_DEFINE([USE_CACHE], [0], [Enable s3fs local filesystem cache])])
-	
-	
-dnl 
-dnl Enable/Disable s3fs local filesystem cache
-dnl
-AC_ARG_ENABLE(awsV2, 
-	[AS_HELP_STRING([--enable-awsV2], [Enable AWS V2 Signature algorithm (default=no)])],
-	[AC_DEFINE(USE_V2SIGNATURE, [1], [Disable AWS V2 Signature algorithm ])],
-	[AC_DEFINE(USE_V2SIGNATURE, [0], [Disable AWS V2 Signature algorithm ])])
-
-
 dnl ----------------------------------------------
 dnl Choice SSL library
 dnl ----------------------------------------------
@@ -394,6 +374,46 @@ AC_COMPILE_IFELSE(
   ]
 )
 
+
+
+dnl 
+dnl Enable/Disable s3fs local filesystem cache
+dnl
+AC_ARG_ENABLE([cache],
+    [AS_HELP_STRING([--enable-cache], [Enable s3fs local filesystem cache. This could fill up the filesystem (default=no)])],
+    [enable_cache="$enableval"],
+    [enable_cache="no"]
+)
+
+AS_IF([test "x$enable_cache" != "xyes"],
+	[cache_val=1],
+	[cache_val=0]
+)
+
+AC_DEFINE_UNQUOTED(S3FS_CACHE, [${cache_val}], [Enable local cache])
+	
+	
+dnl 
+dnl Enable/Disable s3fs local filesystem cache
+dnl
+dnl AC_ARG_ENABLE(awsV2, 
+dnl 	[AS_HELP_STRING([--enable-awsV2], [Enable AWS V2 Signature algorithm (default=no)])],
+dnl 	[use_awsV2=true],
+dnl 	[use_awsV2=false]
+dnl 	)
+dnl AC_DEFINE_UNQUOTED(USE_V2SIGNATURE, [${use_awsV2}], [Disable AWS V2 Signature algorithm ])
+AC_ARG_ENABLE([awsv2],
+    [AS_HELP_STRING([--enable-awsv2], [Enable AWS V2 Signature algorithm (default=no)])],
+    [enable_awsv2="$enableval"],
+    [enable_awsv2="no"]
+)
+
+AS_IF([test "x$enable_awsv2" != "xyes"], 
+	[awsv2_val=1],
+	[awsv2_val=0]
+)
+
+AC_DEFINE_UNQUOTED(USE_V2SIGNATURE, [${awsv2_val}], [Enable AWS V2 Signature algorithm])
 
 dnl ----------------------------------------------
 dnl dl library
