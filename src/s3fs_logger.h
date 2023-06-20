@@ -218,6 +218,9 @@ void s3fs_low_logprn2(S3fsLog::s3fs_log_level level, int nest, const char* file,
 // [NOTE]
 // small trick for VA_ARGS
 //
+
+#if USE_LOGGER
+
 #define S3FS_PRN_EXIT(fmt, ...)   S3FS_LOW_LOGPRN_EXIT(fmt, ##__VA_ARGS__, "")
 #define S3FS_PRN_CRIT(fmt, ...)   S3FS_LOW_LOGPRN(S3fsLog::LEVEL_CRIT, fmt, ##__VA_ARGS__)
 #define S3FS_PRN_ERR(fmt, ...)    S3FS_LOW_LOGPRN(S3fsLog::LEVEL_ERR,  fmt, ##__VA_ARGS__)
@@ -229,6 +232,23 @@ void s3fs_low_logprn2(S3fsLog::s3fs_log_level level, int nest, const char* file,
 #define S3FS_PRN_INFO3(fmt, ...)  S3FS_LOW_LOGPRN2(S3fsLog::LEVEL_INFO, 3, fmt, ##__VA_ARGS__)
 #define S3FS_PRN_CURL(fmt, ...)   S3FS_LOW_CURLDBG(fmt, ##__VA_ARGS__, "")
 #define S3FS_PRN_CACHE(fp, ...)   S3FS_LOW_CACHE(fp, ##__VA_ARGS__, "")
+
+#else
+
+#define S3FS_PRN_EXIT(fmt, ...)
+#define S3FS_PRN_CRIT(fmt, ...)
+#define S3FS_PRN_ERR(fmt, ...)
+#define S3FS_PRN_WARN(fmt, ...)
+#define S3FS_PRN_DBG(fmt, ...)
+#define S3FS_PRN_INFO(fmt, ...)
+#define S3FS_PRN_INFO1(fmt, ...)
+#define S3FS_PRN_INFO2(fmt, ...)
+#define S3FS_PRN_INFO3(fmt, ...)
+#define S3FS_PRN_CURL(fmt, ...)
+#define S3FS_PRN_CACHE(fp, ...)
+
+
+#endif
 
 #endif // S3FS_LOGGER_H_
 

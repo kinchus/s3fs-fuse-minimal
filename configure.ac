@@ -429,7 +429,7 @@ AC_ARG_ENABLE([cache],
     [enable_cache="$enableval"],
     [enable_cache="no"]
 )
-AC_MSG_CHECKING([S3fs local filesystem cache])
+AC_MSG_CHECKING([S3FS local caching enabled])
 AC_MSG_RESULT([${enable_cache}])
 if test "x${enable_cache}" = "xyes"; then
     cache_val=1
@@ -446,7 +446,7 @@ AC_ARG_ENABLE([awsv2],
     [enable_awsv2="$enableval"],
     [enable_awsv2="no"]
 )
-AC_MSG_CHECKING([AWS V2 signing algorithm])
+AC_MSG_CHECKING([AWS V2 signing enabled])
 AC_MSG_RESULT([${enable_awsv2}])
 if test "x${enable_awsv2}" = "xyes"; then
     awsv2_val=1
@@ -454,6 +454,76 @@ else
     awsv2_val=0
 fi
 AC_DEFINE_UNQUOTED([USE_V2SIGNATURE], [${awsv2_val}], [Enable AWS V2 Signature algorithm])
+
+dnl 
+dnl
+dnl
+AC_ARG_ENABLE([logger],
+    [AS_HELP_STRING([--enable-logging], [Enable S3FS logging (default=no)])],
+    [enable_logger="$enableval"],
+    [enable_logger="no"]
+)
+AC_MSG_CHECKING([S3FS logging enabled])
+AC_MSG_RESULT([${enable_logger}])
+if test "x${enable_logger}" = "xyes"; then
+    logger_val=1
+else
+    logger_val=0
+fi
+AC_DEFINE_UNQUOTED([USE_LOGGER], [${logger_val}], [Enable S3FS logging])
+
+dnl 
+dnl
+dnl
+AC_ARG_ENABLE([aws-credentials],
+    [AS_HELP_STRING([--enable-aws-credentials], [Enable AWS extra features (default=no)])],
+    [enable_awscreds="$enableval"],
+    [enable_awscreds="no"]
+)
+AC_MSG_CHECKING([AWS credentials file support])
+AC_MSG_RESULT([${enable_awscreds}])
+if test "x${enable_awscreds}" = "xyes"; then
+    awscreds_val=1
+else
+    awscreds_val=0
+fi
+AC_DEFINE_UNQUOTED([AWS_CREDENTIALS], [${enable_logger}], [Enable AWS credentials file])
+
+
+dnl 
+dnl
+dnl
+AC_ARG_ENABLE([extras],
+    [AS_HELP_STRING([--enable-extras], [Enable S3FS extra checks (default=no)])],
+    [enable_extras="$enableval"],
+    [enable_extras="no"]
+)
+AC_MSG_CHECKING([S3FS extras enabled])
+AC_MSG_RESULT([${enable_extrachks}])
+if test "x${enable_extrachks}" = "xyes"; then
+    extras_val=1
+else
+    extras_val=0
+fi
+AC_DEFINE_UNQUOTED([S3FS_EXTRAS], [${extras_val}], [Enable S3FS extra features])
+
+
+dnl 
+dnl
+dnl
+AC_ARG_ENABLE([full-help],
+    [AS_HELP_STRING([--enable-full-help], [Enable S3FS full screen help (default=no)])],
+    [enable_fullhelp="$enableval"],
+    [enable_fullhelp="no"]
+)
+AC_MSG_CHECKING([S3FS full screen help])
+AC_MSG_RESULT([${enable_awscreds}])
+if test "x${enable_extrachks}" = "xyes"; then
+    extrachks_val=1
+else
+    extrachks_val=0
+fi
+AC_DEFINE_UNQUOTED([EXTRA_CHECKS], [${extrachks_val}], [Enable S3FS extra checks])
 
 
 dnl ----------------------------------------------
