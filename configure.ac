@@ -376,44 +376,12 @@ AC_COMPILE_IFELSE(
 
 
 
-dnl 
-dnl Enable/Disable s3fs local filesystem cache
-dnl
-AC_ARG_ENABLE([cache],
-    [AS_HELP_STRING([--enable-cache], [Enable s3fs local filesystem cache. This could fill up the filesystem (default=no)])],
-    [enable_cache="$enableval"],
-    [enable_cache="no"]
-)
 
-AS_IF([test "x$enable_cache" != "xyes"],
-	[cache_val=1],
-	[cache_val=0]
-)
+dnl AS_IF([test "x$enable_awsv2" != "xyes"], 
+dnl 	[awsv2_val=1],
+dnl 	[awsv2_val=0]
+dnl )
 
-AC_DEFINE_UNQUOTED(S3FS_CACHE, [${cache_val}], [Enable local cache])
-	
-	
-dnl 
-dnl Enable/Disable s3fs local filesystem cache
-dnl
-dnl AC_ARG_ENABLE(awsV2, 
-dnl 	[AS_HELP_STRING([--enable-awsV2], [Enable AWS V2 Signature algorithm (default=no)])],
-dnl 	[use_awsV2=true],
-dnl 	[use_awsV2=false]
-dnl 	)
-dnl AC_DEFINE_UNQUOTED(USE_V2SIGNATURE, [${use_awsV2}], [Disable AWS V2 Signature algorithm ])
-AC_ARG_ENABLE([awsv2],
-    [AS_HELP_STRING([--enable-awsv2], [Enable AWS V2 Signature algorithm (default=no)])],
-    [enable_awsv2="$enableval"],
-    [enable_awsv2="no"]
-)
-
-AS_IF([test "x$enable_awsv2" != "xyes"], 
-	[awsv2_val=1],
-	[awsv2_val=0]
-)
-
-AC_DEFINE_UNQUOTED(USE_V2SIGNATURE, [${awsv2_val}], [Enable AWS V2 Signature algorithm])
 
 dnl ----------------------------------------------
 dnl dl library
@@ -451,6 +419,42 @@ fi
 AC_MSG_RESULT([${GITCOMMITHASH}])
 
 AC_DEFINE_UNQUOTED([COMMIT_HASH_VAL], ["${GITCOMMITHASH}"], [short commit hash value on github])
+
+
+dnl 
+dnl Enable/Disable s3fs local filesystem cache
+dnl
+AC_ARG_ENABLE([cache],
+    [AS_HELP_STRING([--enable-cache], [Enable s3fs local filesystem cache. This could fill up the filesystem (default=no)])],
+    [enable_cache="$enableval"],
+    [enable_cache="no"]
+)
+AC_MSG_CHECKING([S3fs local filesystem cache])
+AC_MSG_RESULT([${enable_cache}])
+if test "x${enable_cache}" = "xyes"; then
+    cache_val=1
+else
+    cache_val=0
+fi
+AC_DEFINE_UNQUOTED([S3FS_CACHE], [${cache_val}], [Enable local cache])
+
+dnl 
+dnl Enable/Disable AWS V2 Signing algorithm
+dnl
+AC_ARG_ENABLE([awsv2],
+    [AS_HELP_STRING([--enable-awsv2], [Enable AWS V2 Signature algorithm (default=no)])],
+    [enable_awsv2="$enableval"],
+    [enable_awsv2="no"]
+)
+AC_MSG_CHECKING([AWS V2 signing algorithm])
+AC_MSG_RESULT([${enable_awsv2}])
+if test "x${enable_awsv2}" = "xyes"; then
+    awsv2_val=1
+else
+    awsv2_val=0
+fi
+AC_DEFINE_UNQUOTED([USE_V2SIGNATURE], [${awsv2_val}], [Enable AWS V2 Signature algorithm])
+
 
 dnl ----------------------------------------------
 dnl put
