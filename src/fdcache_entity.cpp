@@ -1462,10 +1462,11 @@ int FdEntity::RowFlush(int fd, const char* tpath, AutoLock::Type type, bool forc
         pagelist.Dump();
     }
 
-    int result;
+    int result = 0;
     if(nomultipart){
         // No multipart upload
         result = RowFlushNoMultipart(pseudo_obj, tpath);
+#if ENABLE_S3FS_EXTRAS
     }else if(FdEntity::streamupload){
         // Stream multipart upload
         result = RowFlushStreamMultipart(pseudo_obj, tpath);
@@ -1475,6 +1476,7 @@ int FdEntity::RowFlush(int fd, const char* tpath, AutoLock::Type type, bool forc
     }else{
         // Normal multipart upload
         result = RowFlushMultipart(pseudo_obj, tpath);
+#endif
     }
 
     // [NOTE]
@@ -1553,6 +1555,7 @@ int FdEntity::RowFlushNoMultipart(PseudoFdInfo* pseudo_obj, const char* tpath)
     return result;
 }
 
+#if ENABLE_S3FS_EXTRAS
 // [NOTE]
 // Both fdent_lock and fdent_data_lock must be locked before calling.
 //
@@ -1967,6 +1970,8 @@ int FdEntity::RowFlushStreamMultipart(PseudoFdInfo* pseudo_obj, const char* tpat
 
     return result;
 }
+
+#endif
 
 // [NOTICE]
 // Need to lock before calling this method.

@@ -456,6 +456,7 @@ bool StatCache::UpdateMetaStats(const std::string& key, headers_t& meta)
 
 bool StatCache::AddNoObjectCache(const std::string& key)
 {
+#if ENABLE_CACHE
     if(!IsCacheNoObject){
         return true;    // pretend successful
     }
@@ -506,6 +507,7 @@ bool StatCache::AddNoObjectCache(const std::string& key)
         // if symbolic link cache has key, thus remove it.
         DelSymlink(key.c_str(), AutoLock::ALREADY_LOCKED);
     }
+#endif
     return true;
 }
 

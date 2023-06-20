@@ -129,7 +129,11 @@ class StatCache
         }
         bool GetCacheNoObject() const
         {
+#if ENABLE_CACHE
             return IsCacheNoObject;
+#else
+            return false;
+#endif
         }
 
         // Get stat cache

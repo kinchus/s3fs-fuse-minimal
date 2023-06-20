@@ -499,8 +499,8 @@ AC_ARG_ENABLE([extras],
     [enable_extras="no"]
 )
 AC_MSG_CHECKING([S3FS extras enabled])
-AC_MSG_RESULT([${enable_extrachks}])
-if test "x${enable_extrachks}" = "xyes"; then
+AC_MSG_RESULT([${enable_extras}])
+if test "x${enable_extras}" = "xyes"; then
     extras_val=1
 else
     extras_val=0
